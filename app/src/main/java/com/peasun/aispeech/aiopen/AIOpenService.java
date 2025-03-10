@@ -1,9 +1,12 @@
 package com.peasun.aispeech.aiopen;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
@@ -11,7 +14,8 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.sharjie.videodemo.MainActivity;
+import com.sharjeck.videodemo.R;
+
 
 /**
  * Created by Shahsen on 2020/2/23.
@@ -19,10 +23,9 @@ import com.sharjie.videodemo.MainActivity;
 public class AIOpenService extends Service {
     private String TAG = "AIOpenService";
 
-    AIOpenReceiver aiOpenReceiver = null;
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        startForce();
         if (intent != null) {
             Bundle data = intent.getExtras();
             String action = intent.getAction();
@@ -85,45 +88,39 @@ public class AIOpenService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        startForce();
-        lauchActivity();
-
-        //register video app to ai server
-        AIOpenUtils.registerVideoApp(this);
-
-        //register receiver
-        aiOpenReceiver = AIOpenUtils.registerVideoReciver(this);
     }
 
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        unregisterReceiver(aiOpenReceiver);
-    }
-
-    private void lauchActivity() {
-        Intent intent = new Intent();
-        intent.setClass(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-        this.startActivity(intent);
     }
 
     private void startForce() {
         try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                String CHANNEL_ONE_ID = "com.sharjie.video";
-                String CHANNEL_ONE_NAME = "VIDEO SERVICE";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                String CHANNEL_ONE_ID = "com.sharjeck.openai";
+                String CHANNEL_ONE_NAME = "AI SERVICE";
                 NotificationChannel notificationChannel =
                         new NotificationChannel(CHANNEL_ONE_ID, CHANNEL_ONE_NAME, NotificationManager.IMPORTANCE_HIGH);
                 NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                 assert manager != null;
                 manager.createNotificationChannel(notificationChannel);
-                startForeground(1, new NotificationCompat.Builder(this, CHANNEL_ONE_ID).build());
+//                startForeground(1, new NotificationCompat.Builder(this, CHANNEL_ONE_ID).build());
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this.getApplicationContext(), CHANNEL_ONE_ID);
+                Notification notification = builder.setOngoing(true)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setPriority(NotificationCompat.PRIORITY_MIN)
+                        .setCategory(Notification.CATEGORY_SERVICE)
+                        .build();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(10, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE);
+                } else {
+                    startForeground(10, notification);
+                }
+                return;
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
     }

@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
+    compileSdk 35
 
-    namespace 'com.sharjie.videodemo'
+    namespace 'com.sharjeck.videodemo'
 
     defaultConfig {
-        applicationId "com.sharjie.videodemo"
+        applicationId "com.sharjeck.videodemo"
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 101
